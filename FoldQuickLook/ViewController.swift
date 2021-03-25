@@ -6,13 +6,26 @@
 //
 
 import Cocoa
+import Metal
+import MetalKit
 
 class ViewController: NSViewController {
+  
+  var renderer: Renderer!
+  var metalView: MetalView!
+  
+  override func viewWillLayout() {
+    super.viewWillLayout()
+    metalView.frame = self.view.bounds
+//    print("View bounds \(self.view.bounds)")
+  }
 
   override func viewDidLoad() {
     super.viewDidLoad()
-
-    // Do any additional setup after loading the view.
+    renderer = Renderer()
+    metalView = MetalView()
+    renderer.mtkView = metalView
+    self.view.addSubview(metalView)
   }
 
   override var representedObject: Any? {
@@ -20,7 +33,6 @@ class ViewController: NSViewController {
     // Update the view, if already loaded.
     }
   }
-
 
 }
 
