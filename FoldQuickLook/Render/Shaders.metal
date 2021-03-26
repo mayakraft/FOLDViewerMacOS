@@ -22,7 +22,7 @@ struct SegmentsUniforms {
 // 3D Mesh
 struct VertexIn {
   float3 position [[attribute(0)]];
-//  float3 normal [[attribute(1)]];
+  float3 normal [[attribute(1)]];
 };
 
 struct VertexOut {
@@ -41,13 +41,18 @@ struct EdgeOut {
 vertex VertexOut vertex_mesh(VertexIn vin [[stage_in]], constant Uniforms &u [[buffer(1)]]) {
   VertexOut vertexOut;
   vertexOut.position = u.projectionMatrix * u.modelViewMatrix * float4(vin.position, 1);
-//  vertexOut.normal = vin.normal;
+  vertexOut.normal = vin.normal;
   return vertexOut;
 }
 
 fragment float4 fragment_mesh(VertexOut fragmentIn [[stage_in]]) {
-  float3 normal = normalize(fragmentIn.normal);
-  return float4(normal, 1);
+  // rainbow color normals
+//  float3 normal = normalize(fragmentIn.normal);
+//  return float4(normal, 1);
+
+  // simple white light from the top (+Y)
+  float gray = (normalize(fragmentIn.normal).y + 1.0) / 2.0;
+  return float4(gray, gray, gray, 1);
 }
 
 // 2D crease pattern, each vertex + normal (2 point, stride 6 floats) is actually a
@@ -67,6 +72,5 @@ fragment float4 fragment_cp(EdgeOut fragmentIn [[stage_in]]) {
 //  return float4(gray, gray, gray, 1);
 //  float3 normal = normalize(fragmentIn.vector.xyz);
 //  return float4(normal, 1);
-
   return float4(1, 0, 0.5, 1);
 }

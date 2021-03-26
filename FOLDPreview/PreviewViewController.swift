@@ -16,10 +16,25 @@ class PreviewViewController: NSViewController, QLPreviewingController {
   override var nibName: NSNib.Name? {
     return NSNib.Name("PreviewViewController")
   }
+  
+  @objc func touchDown() {
+    print("TOUCH DOWN YAY")
+  }
 
   override func loadView() {
     super.loadView()
+//    self.view.allowedTouchTypes = NSTouch.TouchTypeMask.direct
     // Do any additional setup after loading the view.
+    
+    let gesture = NSPressGestureRecognizer(target: self, action: #selector(touchDown))
+    self.view.addGestureRecognizer(gesture)
+
+//    UITapGestureRecognizer *singleFingerDTap = [[UITapGestureRecognizer alloc]
+//                                            initWithTarget:self action:@selector(handleSingleDoubleTap:)];
+//    singleFingerDTap.numberOfTapsRequired = 2;
+//    [self.view addGestureRecognizer:singleFingerDTap];
+//    [self.view setUserInteractionEnabled:YES];
+//    [self.view setMultipleTouchEnabled:YES];
   }
 
   /*
@@ -39,7 +54,37 @@ class PreviewViewController: NSViewController, QLPreviewingController {
     metalView?.frame = self.view.bounds
 //    print("View bounds \(self.view.bounds)")
   }
+
+  override func touchesBegan(with event: NSEvent) {
+    print("super.touchesBegan(with: event)")
+    super.touchesBegan(with: event)
+  }
   
+  override func touchesMoved(with event: NSEvent) {
+    print("super.touchesMoved(with: event)")
+    super.touchesMoved(with: event)
+  }
+  
+  override func touchesEnded(with event: NSEvent) {
+    print("super.touchesEnded(with: event)")
+    super.touchesEnded(with: event)
+  }
+  
+  override func touchesCancelled(with event: NSEvent) {
+    print("super.touchesCancelled(with: event)")
+    super.touchesCancelled(with: event)
+  }
+  
+//  override func quickLook(with event: NSEvent) {
+//    super.quickLook(with: event)
+//    print("QUICK LOOK WITH EVENT")
+//  }
+//
+//  override func quickLookPreviewItems(_ sender: Any?) {
+//    super.quickLookPreviewItems(sender)
+//    print("QUICK LOOK PREVIEW ITEMS")
+//  }
+//
   func preparePreviewOfFile(at url: URL, completionHandler handler: @escaping (Error?) -> Void) {
 
     // load the file contents, do not proceed if there is an error

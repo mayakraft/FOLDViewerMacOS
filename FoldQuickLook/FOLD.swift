@@ -21,23 +21,9 @@ struct FOLDFormat: Decodable {
   let faces_vertices: [[Int]]?
   let faces_edges: [[Int]]?
   let faces_faces: [[Int]]?
+}
 
-  func asOBJ () -> String {
-    let vertices_coords = self.vertices_coords ?? []
-    let faces_vertices = self.faces_vertices ?? []
-    let vertices = vertices_coords.map { coords -> String in
-      coords.map { n in
-        String(n)
-      }.reduce("v") { (a, b) in a + " " + b }
-    }.reduce("") { (a, b) in a + "\n" + b }
-    let faces = faces_vertices.map { face -> String in
-      face.map { n in
-        String(n)
-      }.reduce("f") { (a, b) in a + " " + b }
-    }.reduce("") { (a, b) in a + "\n" + b }
-    return vertices + "\n" + faces
-  }
-  
+extension FOLDFormat {
   func is3D () -> Bool {
     let vertices_coords = self.vertices_coords ?? []
     if vertices_coords.count < 4 { return false }
@@ -49,31 +35,31 @@ struct FOLDFormat: Decodable {
     let points = vertices_coords
       .map({ vertex -> [Float] in vertex.map { Float($0) } })
       .map { simd_float3($0[0], $0[1], $0[2]) }
-    let vecA = points[1] - points[0]
-    let vecB = points[2] - points[0]
-    let planeNormal = cross(vecA, vecB)
+    let planeNormal = cross(points[1] - points[0], points[2] - points[0])
     // todo, as long as these 3 points were unique...
     // todo, test the magnitude of planNormal. if near zero pick different vectors
-//    print("plane normal magnitude \(length(planeNormal))")
     let vectors = points.map { $0 - points[0] }
     // test all vectors except for the first one (which is a null vector)
-    let subvectors = vectors[1..<vectors.count]
-    let dots = subvectors.map { dot($0, planeNormal) }
-    let coplanar = dots.map { $0 < 1e-6 }.reduce(true) { $0 && $1 }
-    return !coplanar
+    // this evalutes coplanarity. negate it to answer "is this 3d?"
+    return !vectors[1..<vectors.count]
+      .map { dot($0, planeNormal) }
+      .map { $0 < 1e-6 }
+      .reduce(true) { $0 && $1 }
   }
   
+  // todo: this triangulate solution solves convex polygons only
+  // need a solution for non-convex
   func triangulate () -> FOLDFormat {
     let faces_vertices = self.faces_vertices ?? []
     let new_faces_vertices: [[Int]] = faces_vertices.flatMap { face -> [[Int]] in
-      // convert to triangle strip
+      // convert polygon to triangle strip
       let strip: [Int] = face.enumerated()
         .map { (i, _) -> Int in
+          // make array 0, 1, -1, 2, -2, 3... map it to vertex indices
           let zigzag = ceil(Double(i) / 2.0) * (i % 2 == 0 ? -1 : 1)
           return (Int(zigzag) + face.count) % face.count
         }.map { face[$0] }
       // convert triangle strip into triangles
-      // (remember to alterate winding directions)
       return Array.init(repeating: 0, count: face.count - 2)
         .enumerated()
         .map { (i, _) -> [Int] in
@@ -94,116 +80,111 @@ struct FOLDFormat: Decodable {
                       faces_edges: nil,
                       faces_faces: nil)
   }
+}
 
-  /*
-  func triangulate() -> FOLDFormat {
-    guard let fold_vertices_coords = self.vertices_coords else { return self }
-    guard let fold_faces_vertices = self.faces_vertices else { return self }
-
-    let vertices_count: Int32 = Int32(fold_vertices_coords.count)
-    let faces_count: Int32 = Int32(fold_faces_vertices.count)
-    let flatVertices = flattenVerticesCoords(self)
-    let flatFaces = flattenFacesVertices(self)
-
-    let vertices_coords = flatVertices.0.map { Float($0) }
-    let vertices_dimension: Int32 = Int32(flatVertices.1)
-    let faces_vertices = flatFaces.0.map { Int32($0) }
-    let faces_face_vertices_count = flatFaces.1.map { Int32($0) }
-    let faces_vertices_count: Int32 = Int32(faces_vertices.count)
-
-    let vertices_coords_pointer = UnsafeMutablePointer<Float>.allocate(capacity: vertices_coords.count)
-    for i in 0..<vertices_coords.count {
-      vertices_coords_pointer.advanced(by: i).pointee = vertices_coords[i]
+extension FOLDFormat {
+  func thick_edges (surfaceNormal: simd_float3, strokeWidth: Float) -> ([Float32], [UInt16]) {
+    guard let vertices_coords_nd = self.vertices_coords else { return ([], []) }
+    guard let edges_vertices = self.edges_vertices else { return ([], []) }
+    // hardcode vertices to be 3d. and convert to simd3 type
+    let vertices_coords = vertices_coords_nd.map { (vertex) -> simd_float3 in
+      simd_float3([0, 1, 2].map { vertex.indices.contains($0) ? Float(vertex[$0]) : 0.0 })
     }
-    let faces_face_vertices_count_pointer = UnsafeMutablePointer<Int32>.allocate(capacity: faces_face_vertices_count.count)
-    for i in 0..<faces_face_vertices_count.count {
-      faces_face_vertices_count_pointer.advanced(by: i).pointee = faces_face_vertices_count[i]
+    let edges_vertices_coords = edges_vertices.map { edge_vertices -> [simd_float3] in
+      edge_vertices.map { vertices_coords[$0] }
     }
-    let faces_vertices_pointer = UnsafeMutablePointer<Int32>.allocate(capacity: faces_vertices.count)
-    for i in 0..<faces_vertices.count {
-      faces_vertices_pointer.advanced(by: i).pointee = faces_vertices[i]
-    }
-
-//    print("vertices_coords_pointer", vertices_coords_pointer)
-//    print("vertices_count", vertices_count)
-//    print("vertices_dimension", vertices_dimension)
-//    print("faces_vertices_pointer", faces_vertices_pointer)
-//    print("faces_count", faces_count)
-//    print("faces_vertices_count", faces_vertices_count)
-//    print("faces_face_vertices_count_pointer", faces_face_vertices_count_pointer)
-
-//    var return_triangle_count: Int32 = 0
-//    var return_triangle_array: UnsafeMutablePointer<Int32>
-//    var return_triangle_array: Int32 = 0
-        
-    let mesh: TessData = triangulate_mesh(
-      vertices_coords_pointer,
-      vertices_count,
-      vertices_dimension,
-      faces_vertices_pointer,
-      faces_count,
-      faces_vertices_count,
-      faces_face_vertices_count_pointer)
-    
-//    print(mesh)
-    
-    let new_vertices_coords = Array<[Double]>(repeating: [],
-                                             count: Int(mesh.vertex_array_count))
+    let edges_vector = edges_vertices_coords.map { $0[1] - $0[0] }
+    let edges_cross = edges_vector
+      .map { normalize(cross($0, surfaceNormal)) * strokeWidth }
+    let thick_edges: [Float32] = edges_vertices_coords
       .enumerated()
-      .map {[
-        Double(mesh.vertex_array[$0.offset * 3 + 0]),
-        Double(mesh.vertex_array[$0.offset * 3 + 1]),
-        Double(mesh.vertex_array[$0.offset * 3 + 2])
-      ]}
-    
-    let new_faces_vertices = Array<[Int]>(repeating: [],
-                                             count: Int(mesh.triangle_array_count))
+      .map { (i:Int, e:[simd_float3]) -> [simd_float3] in ([
+        e[0] + edges_cross[i],
+        e[0] - edges_cross[i],
+        e[1] + edges_cross[i],
+        e[1] - edges_cross[i]
+      ])}
+      .reduce([]) { $0 + $1 }
+      .map { v -> [Float32] in ([v.x, v.y, v.z]) }
+      .reduce([]) { $0 + $1 }
+    let triangles = edges_vertices
       .enumerated()
-      .map {[
-        Int(mesh.triangle_array[$0.offset * 3 + 0]),
-        Int(mesh.triangle_array[$0.offset * 3 + 1]),
-        Int(mesh.triangle_array[$0.offset * 3 + 2])
-      ]}
-//    print("new_vertices_coords", new_vertices_coords)
-//    print("new_faces_vertices", new_faces_vertices)
-
-    return FOLDFormat(vertices_coords: new_vertices_coords,
-                      vertices_vertices: nil,
-                      vertices_edges: nil,
-                      vertices_faces: nil,
-                      edges_vertices: nil,
-                      edges_assignment: nil,
-                      edges_foldAngle: nil,
-                      edges_edges: nil,
-                      edges_faces: nil,
-                      faces_vertices: new_faces_vertices,
-                      faces_edges: nil,
-                      faces_faces: nil)
-
-//    let tris = UnsafeMutableBufferPointer<Int32>(start: return_triangle_array, count: Int(return_triangle_count))
-//    let tris = return_triangle_array
-//    var triangles:[[Int]] = [];
-//    for i in 0..<return_triangle_count {
-//      triangles.append([0, 1, 2].map { Int(tris[Int(i) * 3 + $0]) })
-//    }
-//
-////    print("final triangles", triangles)
-////    free(return_triangle_array)
-//
-//    return FOLDFormat(vertices_coords: self.vertices_coords,
-//                      vertices_vertices: self.vertices_vertices,
-//                      vertices_edges: self.vertices_edges,
-//                      vertices_faces: nil,
-//                      edges_vertices: self.edges_vertices,
-//                      edges_assignment: self.edges_assignment,
-//                      edges_foldAngle: self.edges_foldAngle,
-//                      edges_edges: self.edges_edges,
-//                      edges_faces: self.edges_faces,
-//                      faces_vertices: triangles,
-//                      faces_edges: nil,
-//                      faces_faces: nil)
+      .map({ (i: Int, _) -> [UInt16] in [0, 1, 2, 2, 1, 3]
+        .map { UInt16($0 + i * 4) } })
+      .reduce([]) { $0 + $1 }
+    return (thick_edges, triangles)
   }
- 
- */
+  
+  // this forces vertices into 3D
+  func flat_vertices_coords() -> [Float32] {
+    guard let vertices_coords = self.vertices_coords else { return [] }
+    let vertices = vertices_coords.map { (vertex) -> [Float32] in
+      [0, 1, 2].map { i -> Float32 in vertex.indices.contains(i) ? Float32(vertex[i]) : 0.0 }
+    }.reduce([]) { $0 + $1 }
+    return vertices
+  }
+  
+  // this flattens the faces indices but makes no assumption about the
+  // number of points in each face, so the second array is an array, one
+  // index per face, how many points are in each face.
+  func flat_faces_vertices() -> ([UInt16], [Int]) {
+    guard let faces_vertices = self.faces_vertices else { return ([], []) }
+    return (
+      faces_vertices.flatMap { $0 }.map { UInt16($0) },
+      faces_vertices.map { $0.count }
+    )
+  }
 
+//  func edgesVerticesWithFaces() -> ([Float32], [UInt16]) {
+//    guard let vertices_coords_nd = self.vertices_coords else { return ([], []) }
+//    guard let edges_vertices_unsorted = self.edges_vertices else { return ([], []) }
+//    guard let faces_vertices = self.faces_vertices else { return ([], []) }
+//    // force vertices_coords to be 3D.
+//    let vertices_coords = vertices_coords_nd.map { (vertex) -> [Float32] in
+//      [0, 1, 2].map { i -> Float32 in vertex.indices.contains(i) ? Float32(vertex[i]) : 0.0 }
+//    }
+//    // sort edges_vertices so that at least every vertex is represented in the first position
+//    // weird, i know. but we need this because of the way we are passing these arrays to the
+//    // shader, and we need to reference a vertex in the faces by the first position in an edge.
+//    var seen_vertices: [Bool] = Array.init(repeating: false, count: vertices_coords.count)
+//    let edges_vertices:[[Int]] = edges_vertices_unsorted.map { edge -> [Int] in
+//      let flip_edge = seen_vertices[edge[0]] && !seen_vertices[edge[1]]
+//      seen_vertices[edge[ flip_edge ? 1 : 0 ]] = true
+//      return flip_edge ? [edge[1], edge[0]] : edge
+//    }
+//    var new_vertices_indices:[Int] = Array.init(repeating: -1, count: vertices_coords.count)
+//    edges_vertices.enumerated().forEach { (i, edge) in
+//      new_vertices_indices[edge[0]] = i
+//    }
+////    print("new_vertices_indices \(new_vertices_indices)")
+//    let edges_vertices_coords = edges_vertices.map { edge_vertices -> [[Float32]] in
+//      edge_vertices.map { vertices_coords[$0] }
+//    }
+//    let edges_vertices_coords_flat: [Float32] = edges_vertices_coords
+//      .reduce([]) { $0 + $1 }
+//      .reduce([]) { $0 + $1 }
+//
+//    let faces_vertices_flat = faces_vertices.flatMap { $0 }
+//      .map { new_vertices_indices[$0] }
+//      .map { UInt16($0) }
+//
+//    return (edges_vertices_coords_flat, faces_vertices_flat)
+//  }
+  
+  
+  func obj () -> String {
+    let vertices_coords = self.vertices_coords ?? []
+    let faces_vertices = self.faces_vertices ?? []
+    let vertices = vertices_coords.map { coords -> String in
+      coords.map { n in
+        String(n)
+      }.reduce("v") { (a, b) in a + " " + b }
+    }.reduce("") { (a, b) in a + "\n" + b }
+    let faces = faces_vertices.map { face -> String in
+      face.map { n in
+        String(n)
+      }.reduce("f") { (a, b) in a + " " + b }
+    }.reduce("") { (a, b) in a + "\n" + b }
+    return vertices + "\n" + faces
+  }
 }

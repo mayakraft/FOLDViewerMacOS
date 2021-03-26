@@ -9,8 +9,11 @@ import Cocoa
 
 class Document: NSDocument {
 
+  var fold: FOLDFormat?
+  var viewController: ViewController!
+
   override init() {
-      super.init()
+    super.init()
     // Add your subclass-specific initialization here.
   }
 
@@ -19,10 +22,16 @@ class Document: NSDocument {
   }
 
   override func makeWindowControllers() {
-    // Returns the Storyboard that contains your Document window.
     let storyboard = NSStoryboard(name: NSStoryboard.Name("Main"), bundle: nil)
     let windowController = storyboard.instantiateController(withIdentifier: NSStoryboard.SceneIdentifier("Document Window Controller")) as! NSWindowController
     self.addWindowController(windowController)
+
+    if let contentViewController = windowController.contentViewController as? ViewController {
+      self.viewController = contentViewController
+      if let fold = self.fold {
+        self.viewController.renderer.loadFOLD(fold)
+      }
+    }
   }
 
   override func data(ofType typeName: String) throws -> Data {
@@ -32,30 +41,12 @@ class Document: NSDocument {
   }
 
   override func read(from data: Data, ofType typeName: String) throws {
-    // Insert code here to read your document from the given data of the specified type, throwing an error in case of failure.
-    // Alternatively, you could remove this method and override read(from:ofType:) instead.
-    // If you do, you should also override isEntireFileLoaded to return false if the contents are lazily loaded.
-
-    // my particular file type is a JSON format.
     do {
-      let _: FOLDFormat = try JSONDecoder()
-        .decode(FOLDFormat.self, from: data)
-//      print("loaded fold \(fold)")
-
-      // this is a custom NSView/UIView able to process our data format.
-      // you can render a view using AppKit/UIKit, Quartz, or Metal
-//      renderer.loadFOLD(fold)
-
-//        let foldView = FOLDView()
-//        foldView.fold = fold
-//        self.view.addSubview(foldView)
-    // json parsing error, the file will not be previewed
+      self.fold = try JSONDecoder().decode(FOLDFormat.self, from: data)
     } catch {
       throw NSError(domain: NSOSStatusErrorDomain, code: unimpErr, userInfo: nil)
     }
-
   }
-
 
 }
 

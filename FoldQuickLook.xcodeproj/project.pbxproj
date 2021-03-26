@@ -7,6 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D55BF6B5260E2EFD0016803D /* simpler.fold in Resources */ = {isa = PBXBuildFile; fileRef = D55BF6B2260E2EFD0016803D /* simpler.fold */; };
+		D55BF6B6260E2EFD0016803D /* simpler.fold in Resources */ = {isa = PBXBuildFile; fileRef = D55BF6B2260E2EFD0016803D /* simpler.fold */; };
+		D55BF6B7260E2EFD0016803D /* simple.fold in Resources */ = {isa = PBXBuildFile; fileRef = D55BF6B3260E2EFD0016803D /* simple.fold */; };
+		D55BF6B8260E2EFD0016803D /* simple.fold in Resources */ = {isa = PBXBuildFile; fileRef = D55BF6B3260E2EFD0016803D /* simple.fold */; };
+		D55BF6B9260E2EFD0016803D /* simple-4.fold in Resources */ = {isa = PBXBuildFile; fileRef = D55BF6B4260E2EFD0016803D /* simple-4.fold */; };
+		D55BF6BA260E2EFD0016803D /* simple-4.fold in Resources */ = {isa = PBXBuildFile; fileRef = D55BF6B4260E2EFD0016803D /* simple-4.fold */; };
 		D5AA0356260B5DF800A38682 /* kraft-sea-turtle.fold in Resources */ = {isa = PBXBuildFile; fileRef = D5AA0355260B5DF800A38682 /* kraft-sea-turtle.fold */; };
 		D5AA0357260B5DF800A38682 /* kraft-sea-turtle.fold in Resources */ = {isa = PBXBuildFile; fileRef = D5AA0355260B5DF800A38682 /* kraft-sea-turtle.fold */; };
 		D5AA035B260B5DFE00A38682 /* crane.fold in Resources */ = {isa = PBXBuildFile; fileRef = D5AA035A260B5DFE00A38682 /* crane.fold */; };
@@ -77,6 +83,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		D55BF6B2260E2EFD0016803D /* simpler.fold */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = simpler.fold; sourceTree = "<group>"; };
+		D55BF6B3260E2EFD0016803D /* simple.fold */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = simple.fold; sourceTree = "<group>"; };
+		D55BF6B4260E2EFD0016803D /* simple-4.fold */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "simple-4.fold"; sourceTree = "<group>"; };
 		D5AA0355260B5DF800A38682 /* kraft-sea-turtle.fold */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "kraft-sea-turtle.fold"; sourceTree = "<group>"; };
 		D5AA035A260B5DFE00A38682 /* crane.fold */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = crane.fold; sourceTree = "<group>"; };
 		D5AA035F260B5E0300A38682 /* miura-ori.fold */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "miura-ori.fold"; sourceTree = "<group>"; };
@@ -133,6 +142,9 @@
 			isa = PBXGroup;
 			children = (
 				D5AA0355260B5DF800A38682 /* kraft-sea-turtle.fold */,
+				D55BF6B4260E2EFD0016803D /* simple-4.fold */,
+				D55BF6B3260E2EFD0016803D /* simple.fold */,
+				D55BF6B2260E2EFD0016803D /* simpler.fold */,
 				D5AA0364260B5E1200A38682 /* three-fold.fold */,
 				D5AA035F260B5E0300A38682 /* miura-ori.fold */,
 				D5AA035A260B5DFE00A38682 /* crane.fold */,
@@ -167,6 +179,7 @@
 				D5B39581260B499F000E933B /* ViewController.swift */,
 				D5B395CC260B4A20000E933B /* FOLD.swift */,
 				D5B395D1260B4A34000E933B /* MTKGestureView.swift */,
+				D5B395AE260B4A0D000E933B /* MetalView.swift */,
 				D5B39583260B499F000E933B /* Document.swift */,
 				D5B39592260B49A7000E933B /* Render */,
 				D5B39593260B49B1000E933B /* Model */,
@@ -183,7 +196,6 @@
 			isa = PBXGroup;
 			children = (
 				D5B395AF260B4A0D000E933B /* Renderer.swift */,
-				D5B395AE260B4A0D000E933B /* MetalView.swift */,
 				D5B395B0260B4A0D000E933B /* Math.swift */,
 				D5B395AD260B4A0D000E933B /* Camera.swift */,
 				D5B395B1260B4A0D000E933B /* Shaders.metal */,
@@ -304,9 +316,12 @@
 			files = (
 				D5B39586260B49A0000E933B /* Assets.xcassets in Resources */,
 				D5AA035B260B5DFE00A38682 /* crane.fold in Resources */,
+				D55BF6B7260E2EFD0016803D /* simple.fold in Resources */,
 				D5AA0360260B5E0300A38682 /* miura-ori.fold in Resources */,
+				D55BF6B5260E2EFD0016803D /* simpler.fold in Resources */,
 				D5AA0365260B5E1200A38682 /* three-fold.fold in Resources */,
 				D5B395DB260B4F65000E933B /* huffman.fold in Resources */,
+				D55BF6B9260E2EFD0016803D /* simple-4.fold in Resources */,
 				D5B39589260B49A0000E933B /* Main.storyboard in Resources */,
 				D5AA0356260B5DF800A38682 /* kraft-sea-turtle.fold in Resources */,
 			);
@@ -316,11 +331,14 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D55BF6B8260E2EFD0016803D /* simple.fold in Resources */,
 				D5AA0357260B5DF800A38682 /* kraft-sea-turtle.fold in Resources */,
 				D5B395DC260B4F65000E933B /* huffman.fold in Resources */,
 				D5AA035C260B5DFE00A38682 /* crane.fold in Resources */,
 				D5B395A1260B49FC000E933B /* PreviewViewController.xib in Resources */,
+				D55BF6B6260E2EFD0016803D /* simpler.fold in Resources */,
 				D5AA0366260B5E1200A38682 /* three-fold.fold in Resources */,
+				D55BF6BA260E2EFD0016803D /* simple-4.fold in Resources */,
 				D5AA0361260B5E0300A38682 /* miura-ori.fold in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -1,0 +1,22 @@
+{
+    "file_spec": 1.1,
+    "file_creator": "text editor",
+    "file_classes": ["singleModel"],
+    "frame_title": "simple",
+    "frame_classes": ["foldedForm"],
+    "frame_attributes": ["3D"],
+    "vertices_coords": [
+        [0, 0, 0],
+        [0, 1, 0],
+        [0, 1, 1],
+        [0, 0, 1],
+        [0, 2, 0],
+        [0, 2, 1]
+    ],
+    "faces_vertices": [
+        [4, 5, 2],
+        [4, 2, 1],
+        [0, 1, 2],
+        [2, 3, 0]
+    ]
+}
