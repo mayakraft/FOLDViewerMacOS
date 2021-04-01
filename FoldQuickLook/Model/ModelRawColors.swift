@@ -1,8 +1,8 @@
 //
-//  ModelRaw.swift
-//  MeshViewer
+//  ModelRawColors.swift
+//  FoldQuickLook
 //
-//  Created by Robby on 3/5/21.
+//  Created by Robby on 4/1/21.
 //
 
 import Foundation
@@ -12,7 +12,7 @@ import MetalKit
 // vertices and faces, as an array of floats and ints
 // this is hard-coded to use mesh triangles (not tri-strips)
 // but it can be easily extended to lines/strips/...
-class ModelRaw: Model {
+class ModelRawColors: Model {
   var vertexBuffer: MTLBuffer!
   var triangleBuffer: MTLBuffer!
   var trianglesCount: Int = 0
@@ -25,11 +25,11 @@ class ModelRaw: Model {
       let verticesLength = vertexBuffer.length / MemoryLayout<Float32>.size
       var mins = vector_float3(repeating: Float.infinity)
       var maxs = vector_float3(repeating: -Float.infinity)
-      for i in 0..<(verticesLength / 3) {
-        // three dimensions, hardcoded
+      for i in 0..<(verticesLength / 6) {
+        // three dimensions, hardcoded in a vertex/normal strided array
         for d in 0..<3 {
-          if vertices[i*3+d] < mins[d] { mins[d] = vertices[i*3+d] }
-          if vertices[i*3+d] > maxs[d] { maxs[d] = vertices[i*3+d] }
+          if vertices[i*6+d] < mins[d] { mins[d] = vertices[i*6+d] }
+          if vertices[i*6+d] > maxs[d] { maxs[d] = vertices[i*6+d] }
         }
       }
 //      print("bounding box \(maxs), \(mins)")
@@ -37,18 +37,28 @@ class ModelRaw: Model {
     }
   }
 
-  init(device: MTLDevice, vertices: [Float32], triangles: [UInt16]) {
+  init(device: MTLDevice, vertices: [Float32], triangles: [UInt16], colors: [Float32]) {
     super.init(device: device)
-    loadArrays(vertices: vertices, triangles: triangles)
+    loadArrays(vertices: vertices, triangles: triangles, colors: colors)
   }
 
-  internal func loadArrays(vertices: [Float32], triangles: [UInt16]) {
-    let verticesPointer = UnsafeMutablePointer<Float32>.allocate(capacity: vertices.count)
+  internal func loadArrays(vertices: [Float32], triangles: [UInt16], colors: [Float32]) {
+//    let verticesPointer = UnsafeMutablePointer<Float32>.allocate(capacity: vertices.count)
     let trianglesPointer = UnsafeMutablePointer<UInt16>.allocate(capacity: triangles.count)
-    vertices.enumerated().forEach { verticesPointer[$0.offset] = $0.element }
+    let pointer = UnsafeMutablePointer<Float32>.allocate(capacity: vertices.count * 2)
+    for i in 0..<(vertices.count/3) {
+      pointer[i*6 + 0] = vertices[i*3 + 0]
+      pointer[i*6 + 1] = vertices[i*3 + 1]
+      pointer[i*6 + 2] = vertices[i*3 + 2]
+      pointer[i*6 + 3] = colors[i*3 + 0]
+      pointer[i*6 + 4] = colors[i*3 + 1]
+      pointer[i*6 + 5] = colors[i*3 + 2]
+    }
+//    vertices.enumerated().forEach { verticesPointer[$0.offset] = $0.element }
     triangles.enumerated().forEach { trianglesPointer[$0.offset] = $0.element }
-    vertexBuffer = device.makeBuffer(bytes: verticesPointer,
-                                     length: MemoryLayout<Float32>.size * vertices.count,
+    vertexBuffer = device.makeBuffer(bytes: pointer,
+//                                     length: MemoryLayout<Float32>.size * vertices.count,
+                                     length: MemoryLayout<Float32>.size * vertices.count * 2,
                                      options: [])
     triangleBuffer = device.makeBuffer(bytes: trianglesPointer,
                                        length: MemoryLayout<UInt16>.size * triangles.count,
@@ -58,7 +68,11 @@ class ModelRaw: Model {
     vertexDescriptor.attributes[0].format = MTLVertexFormat.float3
     vertexDescriptor.attributes[0].bufferIndex = 0
     vertexDescriptor.attributes[0].offset = 0
-    vertexDescriptor.layouts[0].stride = MemoryLayout<Float32>.size * 3
+    vertexDescriptor.attributes[1].format = MTLVertexFormat.float3
+    vertexDescriptor.attributes[1].bufferIndex = 0
+    vertexDescriptor.attributes[1].offset = MemoryLayout<Float32>.size * 3
+//    vertexDescriptor.layouts[0].stride = MemoryLayout<Float32>.size * 3
+    vertexDescriptor.layouts[0].stride = MemoryLayout<Float32>.size * 6
   }
 
   override func draw(commandEncoder: MTLRenderCommandEncoder) {

@@ -17,7 +17,7 @@ class Camera: NSObject, MetalTouchDelegate {
   var modelOrientation: simd_quatf = simd_quatf(ix: 0, iy: 0, iz: 0, r: 1)
   internal var touchDownOrientation: simd_quatf = simd_quatf(ix: 0, iy: 0, iz: 0, r: 1)
   internal var modelCenter: SIMD3<Float> = [0, 0, 0]
-  internal var modelRadius: Float = 1 // half the largest diameter (largest along one axis)
+  var modelRadius: Float = 1 // half the largest diameter (largest along one axis)
 
   init(view: MTKGestureView) {
     mtkView = view

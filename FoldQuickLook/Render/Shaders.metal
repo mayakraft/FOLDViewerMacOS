@@ -32,9 +32,8 @@ struct VertexOut {
 
 // 2D CP
 struct EdgeOut {
-  float4 origin [[position]];
-  float4 end;
-  float4 vector;
+  float4 position [[position]];
+  float3 color;
 };
 
 // 3D Mesh
@@ -46,7 +45,7 @@ vertex VertexOut vertex_mesh(VertexIn vin [[stage_in]], constant Uniforms &u [[b
 }
 
 fragment float4 fragment_mesh(VertexOut fragmentIn [[stage_in]]) {
-  // rainbow color normals
+//   rainbow color normals
 //  float3 normal = normalize(fragmentIn.normal);
 //  return float4(normal, 1);
 
@@ -60,17 +59,11 @@ fragment float4 fragment_mesh(VertexOut fragmentIn [[stage_in]]) {
 // to one of these vertices
 vertex EdgeOut vertex_cp(VertexIn vin [[stage_in]], constant Uniforms &u [[buffer(1)]]) {
   EdgeOut edgeOut;
-  edgeOut.origin = u.projectionMatrix * u.modelViewMatrix * float4(vin.position, 1);
-//  edgeOut.end = u.projectionMatrix * u.modelViewMatrix * float4(vin.normal, 1);
-//  edgeOut.vector = edgeOut.end - edgeOut.origin;
+  edgeOut.position = u.projectionMatrix * u.modelViewMatrix * float4(vin.position, 1);
+  edgeOut.color = vin.normal;
   return edgeOut;
 }
 
 fragment float4 fragment_cp(EdgeOut fragmentIn [[stage_in]]) {
-//  float gray = (fragmentIn.normalY + 1.0) / 2.0;
-//  float gray = (normalize(fragmentIn.normal).y + 1.0) / 2.0;
-//  return float4(gray, gray, gray, 1);
-//  float3 normal = normalize(fragmentIn.vector.xyz);
-//  return float4(normal, 1);
-  return float4(1, 0, 0.5, 1);
+  return float4(fragmentIn.color, 1);
 }

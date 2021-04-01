@@ -83,20 +83,31 @@ extension FOLDFormat {
 }
 
 extension FOLDFormat {
-  func thick_edges (surfaceNormal: simd_float3, strokeWidth: Float) -> ([Float32], [UInt16]) {
-    guard let vertices_coords_nd = self.vertices_coords else { return ([], []) }
-    guard let edges_vertices = self.edges_vertices else { return ([], []) }
+  
+  func thick_edges (surfaceNormal: simd_float3, strokeWidth: Float) -> ([Float32], [UInt16], [Float32]) {
+    guard let vertices_coords_nd = self.vertices_coords else { return ([], [], []) }
+    guard let edges_vertices = self.edges_vertices else { return ([], [], []) }
+    let edges_assignment: [String] = self.edges_assignment ?? []
     // hardcode vertices to be 3d. and convert to simd3 type
     let vertices_coords = vertices_coords_nd.map { (vertex) -> simd_float3 in
       simd_float3([0, 1, 2].map { vertex.indices.contains($0) ? Float(vertex[$0]) : 0.0 })
     }
+
+    // the paper is a set of white faces
+    let paperVertices = self.flat_vertices_coords()
+    let paperFaces = self.flat_faces_vertices().0
+    let paperColors = vertices_coords
+      .map { _ -> [Float32] in ([1.0, 1.0, 1.0]) }
+      .reduce([]) { $0 + $1 }
+
+    // the lines of the crease pattern
     let edges_vertices_coords = edges_vertices.map { edge_vertices -> [simd_float3] in
       edge_vertices.map { vertices_coords[$0] }
     }
     let edges_vector = edges_vertices_coords.map { $0[1] - $0[0] }
     let edges_cross = edges_vector
       .map { normalize(cross($0, surfaceNormal)) * strokeWidth }
-    let thick_edges: [Float32] = edges_vertices_coords
+    let thick_edges_vertices: [Float32] = edges_vertices_coords
       .enumerated()
       .map { (i:Int, e:[simd_float3]) -> [simd_float3] in ([
         e[0] + edges_cross[i],
@@ -107,12 +118,31 @@ extension FOLDFormat {
       .reduce([]) { $0 + $1 }
       .map { v -> [Float32] in ([v.x, v.y, v.z]) }
       .reduce([]) { $0 + $1 }
+    let paperOffset: Int = paperVertices.count / 3
     let triangles = edges_vertices
       .enumerated()
       .map({ (i: Int, _) -> [UInt16] in [0, 1, 2, 2, 1, 3]
-        .map { UInt16($0 + i * 4) } })
+//        .map { UInt16($0 + i * 4) } })
+        .map { UInt16($0 + i * 4 + paperOffset) } }) // offset by the vertices that make the paper
       .reduce([]) { $0 + $1 }
-    return (thick_edges, triangles)
+    let assignments = edges_assignment.map { s -> simd_float3 in
+      if s == "M" || s == "m" { return simd_float3(1.0, 0.0, 0.0) }
+      if s == "V" || s == "v" { return simd_float3(0.0, 0.0, 1.0) }
+      if s == "F" || s == "f" { return simd_float3(0.8, 0.8, 0.8) }
+      if s == "B" || s == "b" { return simd_float3(0.0, 0.0, 0.0) }
+      if s == "U" || s == "u" { return simd_float3(0.0, 0.0, 0.0) }
+      return simd_float3(1.0, 1.0, 1.0)
+    }.map { a -> [simd_float3] in
+      [a, a, a, a]
+    }.reduce([]) { $0 + $1 }
+    .map { v -> [Float32] in ([v.x, v.y, v.z]) }
+    .reduce([]) { $0 + $1 }
+    
+    let longVertices = paperVertices + thick_edges_vertices
+    let longFaces = paperFaces + triangles
+    let longColors = paperColors + assignments
+    return (longVertices, longFaces, longColors)
+//    return (thick_edges_vertices, triangles, assignments)
   }
   
   // this forces vertices into 3D
@@ -123,7 +153,7 @@ extension FOLDFormat {
     }.reduce([]) { $0 + $1 }
     return vertices
   }
-  
+
   // this flattens the faces indices but makes no assumption about the
   // number of points in each face, so the second array is an array, one
   // index per face, how many points are in each face.
@@ -170,8 +200,7 @@ extension FOLDFormat {
 //
 //    return (edges_vertices_coords_flat, faces_vertices_flat)
 //  }
-  
-  
+
   func obj () -> String {
     let vertices_coords = self.vertices_coords ?? []
     let faces_vertices = self.faces_vertices ?? []

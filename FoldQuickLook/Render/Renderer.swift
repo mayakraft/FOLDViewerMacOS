@@ -42,13 +42,17 @@ class Renderer: NSObject, MTKViewDelegate {
 //      let min = self.camera.modelBounds.minBounds
 //      let strokeWidth: Float = max(mx.x - min.x, mx.y - min.y, mx.z - min.z) / 50.0
       let edges_triangles = fold.thick_edges(surfaceNormal: simd_float3(0, 0, 1), strokeWidth: 0.005)
-      self.model = ModelRaw(device: self.device, vertices: edges_triangles.0, triangles: edges_triangles.1)
+      self.model = ModelRawColors(device: self.device, vertices: edges_triangles.0, triangles: edges_triangles.1, colors: edges_triangles.2)
     }
     // after a model is successfully loaded
     // build a pipeline using the mesh
     self.buildPipeline(is3D: fold.is3D(), view: mtkView, vertexDescriptor: self.model.vertexDescriptor)
     // set the camera zoom to fit the model
     self.camera.modelBounds = self.model.boundingBox
+    // hack to make 2D models fit the window better
+    // we need to move this into 3D modelsl too, but radius should be calculated
+    // taking into consideration the widening in the perspective projection
+    if !fold.is3D() { self.camera.modelRadius *= 0.75 }
   }
   
   // must set mtkView
@@ -80,12 +84,6 @@ class Renderer: NSObject, MTKViewDelegate {
   override init() {
     self.device = MTLCreateSystemDefaultDevice()!
     self.commandQueue = device.makeCommandQueue()!
-
-    let depthDesecriptor = MTLDepthStencilDescriptor()
-    depthDesecriptor.depthCompareFunction = .lessEqual
-    depthDesecriptor.isDepthWriteEnabled = true
-    self.depthStencilState = device.makeDepthStencilState(descriptor: depthDesecriptor)
-
     super.init()
   }
 
@@ -102,6 +100,11 @@ class Renderer: NSObject, MTKViewDelegate {
     pipelineDescriptor.depthAttachmentPixelFormat = view.depthStencilPixelFormat
     // vertexDescriptor comes from the mesh
     pipelineDescriptor.vertexDescriptor = vertexDescriptor
+    // depth is dependent on the model being 3D
+    let depthDesecriptor = MTLDepthStencilDescriptor()
+    depthDesecriptor.isDepthWriteEnabled = is3D
+    depthDesecriptor.depthCompareFunction = .lessEqual
+    self.depthStencilState = device.makeDepthStencilState(descriptor: depthDesecriptor)
     do {
       renderPipeline = try device.makeRenderPipelineState(descriptor: pipelineDescriptor)
     } catch let error { fatalError("MTLRenderPipelineDescriptor \(error)") }
