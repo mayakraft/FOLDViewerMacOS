@@ -73,5 +73,6 @@ class Camera: NSObject, MetalTouchDelegate {
     let smallSize = Float(frame.width < frame.height ? frame.width : frame.height)
     let rotation = simd_quatf(angle: 3 * magnitude / smallSize, axis: axis)
     modelOrientation = touchDownOrientation * rotation
+//    print(modelOrientation)
   }
 }

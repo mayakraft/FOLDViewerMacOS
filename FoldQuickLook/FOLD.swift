@@ -43,7 +43,24 @@ struct FOLDFormat: Decodable {
   let faces_faces: [[Int]]?
 }
 
+// analysis section
 extension FOLDFormat {
+  // get the bounding box by iterating over all the vertices
+  // this assumes that there are no normals/colors mixed in
+  func boundingBox () -> (simd_float3, simd_float3) {
+    var mins = Array(repeating: Double.infinity, count: 3)
+    var maxs = Array(repeating: -Double.infinity, count: 3)
+    self.vertices_coords?.forEach({ vertex in
+      vertex.enumerated().forEach { (i, n) in
+        if n < mins[i] { mins[i] = n }
+        if n > maxs[i] { maxs[i] = n }
+      }
+    })
+    let min = simd_float3(mins.map { $0 == Double.infinity ? 0.0 : $0 }.map { Float($0) })
+    let max = simd_float3(maxs.map { $0 == -Double.infinity ? 0.0 : $0 }.map { Float($0) })
+    return (min, max)
+  }
+
   func surfaceNormal () -> simd_float3 {
     let vertices_coords = self.vertices_coords ?? []
     // if there are fewer than 3 vertices, or those three vertices are 2D, return +Z normal
@@ -55,7 +72,7 @@ extension FOLDFormat {
       .map { vertices_coords[$0] }
       .map({ vertex -> [Float] in vertex.map { Float($0) } })
       .map { simd_float3($0[0], $0[1], $0[2]) }
-    return cross(points[1] - points[0], points[2] - points[0])
+    return normalize(cross(points[1] - points[0], points[2] - points[0]))
   }
 
   func is3D () -> Bool {
@@ -81,13 +98,43 @@ extension FOLDFormat {
       .reduce(true) { $0 && $1 }
   }
   
+  // this forces vertices into 3D
+  func vertices_coords3D() -> [[Double]] {
+    guard let vertices_coords = self.vertices_coords else { return [] }
+    return vertices_coords.map { (vertex) -> [Double] in
+      [0, 1, 2].map { i -> Double in vertex.indices.contains(i) ? vertex[i] : 0.0 }
+    }
+  }
+
+  
+  func facesSignedArea () -> [Double] {
+    let vertices_coords = self.vertices_coords3D()
+    let faces_vertices = self.faces_vertices ?? []
+    let facePoints = faces_vertices.map { face -> [[Double]] in face.map { vertices_coords[$0] } }
+    
+    // todo: need to re-organize these to be able to process 3D coords
+    var faces:[Double] = []
+    for f in 0..<facePoints.count {
+      var face:[Double] = []
+      for i in 0..<facePoints[f].count {
+        let j = (i + 1) % facePoints[f].count
+        let ptA = facePoints[f][i]
+        let ptB = facePoints[f][j]
+        face.append(ptA[0] * ptB[1] - ptA[1] * ptB[0])
+      }
+      faces.append(face.reduce(0) { $0 + $1 })
+    }
+    return faces
+  }
+  
   // todo: this triangulate solution solves convex polygons only
   // need a solution for non-convex
   func triangulate () -> FOLDFormat {
     let faces_vertices = self.faces_vertices ?? []
     let new_faces_vertices: [[Int]] = faces_vertices.flatMap { face -> [[Int]] in
       // convert polygon to triangle strip
-      let strip: [Int] = face.enumerated()
+      let strip: [Int] = face
+        .enumerated()
         .map { (i, _) -> Int in
           // make array 0, 1, -1, 2, -2, 3... map it to vertex indices
           let zigzag = ceil(Double(i) / 2.0) * (i % 2 == 0 ? -1 : 1)
@@ -101,6 +148,7 @@ extension FOLDFormat {
           return i % 2 == 0 ? triangle : triangle.reversed()
         }
     }
+
     return FOLDFormat(vertices_coords: self.vertices_coords,
                       vertices_vertices: self.vertices_vertices,
                       vertices_edges: self.vertices_edges,
@@ -118,12 +166,12 @@ extension FOLDFormat {
 
 extension FOLDFormat {
   
-  func flatCPTriangles (surfaceNormal: simd_float3, strokeWidth: Float) -> ([Float32], [UInt16], [Float32]) {
-    let paperVertices = self.flatVerticesCoords()
-    let paperFaces = self.flatFacesVertices().0
+  func gpuCPTriangles (surfaceNormal: simd_float3, strokeWidth: Float) -> ([Float32], [UInt16], [Float32]) {
+    let paperVertices = self.gpuVerticesCoords()
+    let paperFaces = self.gpuFacesVertices().0
     let paperOffset: UInt16 = UInt16(paperVertices.count / 3)
     let paperColors: [Float32] = paperVertices.map { _ in 1.0 }
-    let (thickVertices, thickTriangles, colors) = self.flatThickEdges(surfaceNormal: surfaceNormal, strokeWidth: strokeWidth)
+    let (thickVertices, thickTriangles, colors) = self.gpuThickEdges(surfaceNormal: surfaceNormal, strokeWidth: strokeWidth)
     // offset by the vertices that make the paper
     let trianglesShifted = thickTriangles.map { $0 + paperOffset }
     // combine arrays
@@ -134,7 +182,7 @@ extension FOLDFormat {
   }
 
   // returns 3 flat arrays: 1. vertices-coords, 2. faces, 3. vertices-colors
-  func flatThickEdges (surfaceNormal: simd_float3, strokeWidth: Float) -> ([Float32], [UInt16], [Float32]) {
+  func gpuThickEdges (surfaceNormal: simd_float3, strokeWidth: Float) -> ([Float32], [UInt16], [Float32]) {
     guard let vertices_coords_nd = self.vertices_coords else { return ([], [], []) }
     guard let edges_vertices = self.edges_vertices else { return ([], [], []) }
     let edges_assignment: [String] = self.edges_assignment ?? []
@@ -174,18 +222,16 @@ extension FOLDFormat {
   }
   
   // this forces vertices into 3D
-  func flatVerticesCoords() -> [Float32] {
-    guard let vertices_coords = self.vertices_coords else { return [] }
-    let vertices = vertices_coords.map { (vertex) -> [Float32] in
-      [0, 1, 2].map { i -> Float32 in vertex.indices.contains(i) ? Float32(vertex[i]) : 0.0 }
-    }.reduce([]) { $0 + $1 }
-    return vertices
+  func gpuVerticesCoords() -> [Float32] {
+    return self.vertices_coords3D()
+      .map { vertex -> [Float32] in vertex.map { Float32($0) } }
+      .reduce([]) { $0 + $1 }
   }
 
   // this flattens the faces indices but makes no assumption about the
   // number of points in each face, so the second array is an array, one
   // index per face, how many points are in each face.
-  func flatFacesVertices() -> ([UInt16], [Int]) {
+  func gpuFacesVertices() -> ([UInt16], [Int]) {
     guard let faces_vertices = self.faces_vertices else { return ([], []) }
     return (
       faces_vertices.flatMap { $0 }.map { UInt16($0) },

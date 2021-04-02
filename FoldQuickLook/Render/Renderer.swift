@@ -31,17 +31,22 @@ class Renderer: NSObject, MTKViewDelegate {
 
 //    print("loaded \(fold.is3D() ? "3D" : "2D") FOLD, vertices: \(fold.vertices_coords?.count ?? 0), edges: \(fold.edges_vertices?.count ?? 0), faces: \(fold.faces_vertices?.count ?? 0)")
     
+    // is the model a 3D model (treat it as a mesh)
     if fold.is3D() {
       self.model = ModelMesh(
         device: self.device,
-        vertices: fold.flatVerticesCoords(),
-        triangles: fold.flatFacesVertices().0)
+        vertices: fold.gpuVerticesCoords(),
+        triangles: fold.gpuFacesVertices().0)
     } else {
-//      self.model = ModelCP(device: self.device, vertices: cp.0, triangles: cp.1)
-//      let mx = self.camera.modelBounds.maxBounds
-//      let min = self.camera.modelBounds.minBounds
-//      let strokeWidth: Float = max(mx.x - min.x, mx.y - min.y, mx.z - min.z) / 50.0
-      let edges_triangles = fold.flatCPTriangles(surfaceNormal: fold.surfaceNormal(), strokeWidth: 0.005)
+      // is the model flat (treat it as a crease pattern)
+      // determine stroke width based on model size
+      let (mins, maxs) = fold.boundingBox()
+      let surfaceNormal = fold.surfaceNormal()
+      let strokeWidth: Float = max(maxs.x - mins.x, maxs.y - mins.y, maxs.z - mins.z) / 500.0
+      let edges_triangles = fold.gpuCPTriangles(surfaceNormal: surfaceNormal, strokeWidth: strokeWidth)
+      // determine orientation, align all flat crease patterns directly at camera
+      let transform = simd_quaternion(simd_float3(0, 0, 1), surfaceNormal)
+      camera.modelOrientation = transform
       self.model = ModelRawColors(device: self.device, vertices: edges_triangles.0, triangles: edges_triangles.1, colors: edges_triangles.2)
     }
     // after a model is successfully loaded
