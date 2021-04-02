@@ -8,6 +8,26 @@
 import Foundation
 import simd
 
+// make these not global variables
+let colorMountain = simd_float3(0.8, 0.1, 0.05)
+let colorValley = simd_float3(0.05, 0.1, 0.5)
+let colorFlat = simd_float3(0.6, 0.6, 0.6)
+let colorBoundary = simd_float3(0.0, 0.0, 0.0)
+let colorUndefined = simd_float3(0.0, 0.0, 0.0)
+
+let colorMap: [String: simd_float3] = [
+  "M": colorMountain,
+  "m": colorMountain,
+  "V": colorValley,
+  "v": colorValley,
+  "F": colorFlat,
+  "f": colorFlat,
+  "B": colorBoundary,
+  "b": colorBoundary,
+  "U": colorUndefined,
+  "u": colorUndefined
+]
+
 struct FOLDFormat: Decodable {
   let vertices_coords: [[Double]]?
   let vertices_vertices: [[Int]]?
@@ -24,6 +44,20 @@ struct FOLDFormat: Decodable {
 }
 
 extension FOLDFormat {
+  func surfaceNormal () -> simd_float3 {
+    let vertices_coords = self.vertices_coords ?? []
+    // if there are fewer than 3 vertices, or those three vertices are 2D, return +Z normal
+    if vertices_coords.count < 3 { return simd_float3(0, 0, 1) }
+    if vertices_coords[0].count < 3 || vertices_coords[1].count < 3 || vertices_coords[2].count < 3 {
+      return simd_float3(0, 0, 1)
+    }
+    let points = [0, 1, 2]
+      .map { vertices_coords[$0] }
+      .map({ vertex -> [Float] in vertex.map { Float($0) } })
+      .map { simd_float3($0[0], $0[1], $0[2]) }
+    return cross(points[1] - points[0], points[2] - points[0])
+  }
+
   func is3D () -> Bool {
     let vertices_coords = self.vertices_coords ?? []
     if vertices_coords.count < 4 { return false }
@@ -84,7 +118,23 @@ extension FOLDFormat {
 
 extension FOLDFormat {
   
-  func thick_edges (surfaceNormal: simd_float3, strokeWidth: Float) -> ([Float32], [UInt16], [Float32]) {
+  func flatCPTriangles (surfaceNormal: simd_float3, strokeWidth: Float) -> ([Float32], [UInt16], [Float32]) {
+    let paperVertices = self.flatVerticesCoords()
+    let paperFaces = self.flatFacesVertices().0
+    let paperOffset: UInt16 = UInt16(paperVertices.count / 3)
+    let paperColors: [Float32] = paperVertices.map { _ in 1.0 }
+    let (thickVertices, thickTriangles, colors) = self.flatThickEdges(surfaceNormal: surfaceNormal, strokeWidth: strokeWidth)
+    // offset by the vertices that make the paper
+    let trianglesShifted = thickTriangles.map { $0 + paperOffset }
+    // combine arrays
+    let allVertices = paperVertices + thickVertices
+    let allFaces = paperFaces + trianglesShifted
+    let allColors = paperColors + colors
+    return (allVertices, allFaces, allColors)
+  }
+
+  // returns 3 flat arrays: 1. vertices-coords, 2. faces, 3. vertices-colors
+  func flatThickEdges (surfaceNormal: simd_float3, strokeWidth: Float) -> ([Float32], [UInt16], [Float32]) {
     guard let vertices_coords_nd = self.vertices_coords else { return ([], [], []) }
     guard let edges_vertices = self.edges_vertices else { return ([], [], []) }
     let edges_assignment: [String] = self.edges_assignment ?? []
@@ -92,14 +142,6 @@ extension FOLDFormat {
     let vertices_coords = vertices_coords_nd.map { (vertex) -> simd_float3 in
       simd_float3([0, 1, 2].map { vertex.indices.contains($0) ? Float(vertex[$0]) : 0.0 })
     }
-
-    // the paper is a set of white faces
-    let paperVertices = self.flat_vertices_coords()
-    let paperFaces = self.flat_faces_vertices().0
-    let paperColors = vertices_coords
-      .map { _ -> [Float32] in ([1.0, 1.0, 1.0]) }
-      .reduce([]) { $0 + $1 }
-
     // the lines of the crease pattern
     let edges_vertices_coords = edges_vertices.map { edge_vertices -> [simd_float3] in
       edge_vertices.map { vertices_coords[$0] }
@@ -118,35 +160,21 @@ extension FOLDFormat {
       .reduce([]) { $0 + $1 }
       .map { v -> [Float32] in ([v.x, v.y, v.z]) }
       .reduce([]) { $0 + $1 }
-    let paperOffset: Int = paperVertices.count / 3
     let triangles = edges_vertices
       .enumerated()
       .map({ (i: Int, _) -> [UInt16] in [0, 1, 2, 2, 1, 3]
-//        .map { UInt16($0 + i * 4) } })
-        .map { UInt16($0 + i * 4 + paperOffset) } }) // offset by the vertices that make the paper
+        .map { UInt16($0 + i * 4) } })
       .reduce([]) { $0 + $1 }
-    let assignments = edges_assignment.map { s -> simd_float3 in
-      if s == "M" || s == "m" { return simd_float3(1.0, 0.0, 0.0) }
-      if s == "V" || s == "v" { return simd_float3(0.0, 0.0, 1.0) }
-      if s == "F" || s == "f" { return simd_float3(0.8, 0.8, 0.8) }
-      if s == "B" || s == "b" { return simd_float3(0.0, 0.0, 0.0) }
-      if s == "U" || s == "u" { return simd_float3(0.0, 0.0, 0.0) }
-      return simd_float3(1.0, 1.0, 1.0)
-    }.map { a -> [simd_float3] in
-      [a, a, a, a]
-    }.reduce([]) { $0 + $1 }
-    .map { v -> [Float32] in ([v.x, v.y, v.z]) }
-    .reduce([]) { $0 + $1 }
-    
-    let longVertices = paperVertices + thick_edges_vertices
-    let longFaces = paperFaces + triangles
-    let longColors = paperColors + assignments
-    return (longVertices, longFaces, longColors)
-//    return (thick_edges_vertices, triangles, assignments)
+    let assignments = edges_assignment.map { s -> simd_float3 in colorMap[s] ?? colorUndefined }
+      .map { a -> [simd_float3] in [a, a, a, a] }
+      .reduce([]) { $0 + $1 }
+      .map { v -> [Float32] in ([v.x, v.y, v.z]) }
+      .reduce([]) { $0 + $1 }
+    return (thick_edges_vertices, triangles, assignments)
   }
   
   // this forces vertices into 3D
-  func flat_vertices_coords() -> [Float32] {
+  func flatVerticesCoords() -> [Float32] {
     guard let vertices_coords = self.vertices_coords else { return [] }
     let vertices = vertices_coords.map { (vertex) -> [Float32] in
       [0, 1, 2].map { i -> Float32 in vertex.indices.contains(i) ? Float32(vertex[i]) : 0.0 }
@@ -157,7 +185,7 @@ extension FOLDFormat {
   // this flattens the faces indices but makes no assumption about the
   // number of points in each face, so the second array is an array, one
   // index per face, how many points are in each face.
-  func flat_faces_vertices() -> ([UInt16], [Int]) {
+  func flatFacesVertices() -> ([UInt16], [Int]) {
     guard let faces_vertices = self.faces_vertices else { return ([], []) }
     return (
       faces_vertices.flatMap { $0 }.map { UInt16($0) },

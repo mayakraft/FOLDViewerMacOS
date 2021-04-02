@@ -17,23 +17,6 @@ class ViewController: NSViewController {
   override func viewWillLayout() {
     super.viewWillLayout()
     metalView.frame = self.view.bounds
-//    print("View bounds \(self.view.bounds)")
-  }
-
-  
-  func loadExampleFile () {
-//    let resource = Bundle.main.url(forResource: "huffman", withExtension: "fold")!
-    let resource = Bundle.main.url(forResource: "crane", withExtension: "fold")!
-//    let resource = Bundle.main.url(forResource: "simple", withExtension: "fold")!
-//    let resource = Bundle.main.url(forResource: "simpler", withExtension: "fold")!
-//    let resource = Bundle.main.url(forResource: "simple-4", withExtension: "fold")!
-    guard let data = FileManager.default.contents(atPath: resource.path) else { return }
-    do {
-      let fold = try JSONDecoder().decode(FOLDFormat.self, from: data)
-      renderer.loadFOLD(fold)
-    } catch let error {
-      print(error)
-    }
   }
 
   override func viewDidLoad() {
@@ -49,8 +32,6 @@ class ViewController: NSViewController {
     }
 
     self.view.addSubview(metalView)
- 
-//    loadExampleFile()
   }
 
   override var representedObject: Any? {

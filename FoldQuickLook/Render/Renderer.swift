@@ -34,14 +34,14 @@ class Renderer: NSObject, MTKViewDelegate {
     if fold.is3D() {
       self.model = ModelMesh(
         device: self.device,
-        vertices: fold.flat_vertices_coords(),
-        triangles: fold.flat_faces_vertices().0)
+        vertices: fold.flatVerticesCoords(),
+        triangles: fold.flatFacesVertices().0)
     } else {
 //      self.model = ModelCP(device: self.device, vertices: cp.0, triangles: cp.1)
 //      let mx = self.camera.modelBounds.maxBounds
 //      let min = self.camera.modelBounds.minBounds
 //      let strokeWidth: Float = max(mx.x - min.x, mx.y - min.y, mx.z - min.z) / 50.0
-      let edges_triangles = fold.thick_edges(surfaceNormal: simd_float3(0, 0, 1), strokeWidth: 0.005)
+      let edges_triangles = fold.flatCPTriangles(surfaceNormal: fold.surfaceNormal(), strokeWidth: 0.005)
       self.model = ModelRawColors(device: self.device, vertices: edges_triangles.0, triangles: edges_triangles.1, colors: edges_triangles.2)
     }
     // after a model is successfully loaded
