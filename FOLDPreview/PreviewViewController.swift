@@ -12,7 +12,6 @@ class PreviewViewController: NSViewController, QLPreviewingController {
   
   var metalView: MetalView?
   var renderer: Renderer?
-  var cumulativeTranslation: NSPoint = .zero
 
   override var nibName: NSNib.Name? {
     return NSNib.Name("PreviewViewController")
@@ -25,15 +24,9 @@ class PreviewViewController: NSViewController, QLPreviewingController {
 
   @objc func touchMoved(target: NSPanGestureRecognizer) {
     guard let metalView = self.metalView else { return }
+    if target.state == .began { metalView.touchDelegate?.didPress() }
     let translate = target.translation(in: metalView)
-    let cumulative = NSPoint(x: cumulativeTranslation.x + translate.x,
-                             y: cumulativeTranslation.y + translate.y)
-    metalView.touchDelegate?.didDrag(x: Float(cumulative.x), y: Float(cumulative.y))
-    switch target.state {
-      case .ended: cumulativeTranslation = cumulative
-      case .cancelled: cumulativeTranslation = cumulative
-      default: break
-    }
+    metalView.touchDelegate?.didDrag(x: Float(translate.x), y: Float(translate.y))
   }
 
   override func loadView() {
