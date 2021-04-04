@@ -54,8 +54,6 @@
 		D5B395D3260B4A34000E933B /* MTKGestureView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5B395D1260B4A34000E933B /* MTKGestureView.swift */; };
 		D5B395DB260B4F65000E933B /* huffman.fold in Resources */ = {isa = PBXBuildFile; fileRef = D5B395DA260B4F65000E933B /* huffman.fold */; };
 		D5B395DC260B4F65000E933B /* huffman.fold in Resources */ = {isa = PBXBuildFile; fileRef = D5B395DA260B4F65000E933B /* huffman.fold */; };
-		D5C3E13C260B974600A503F4 /* ModelCP.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C3E13B260B974600A503F4 /* ModelCP.swift */; };
-		D5C3E13D260B974600A503F4 /* ModelCP.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C3E13B260B974600A503F4 /* ModelCP.swift */; };
 		D5E6EC1C261534C300C5B442 /* ModelRawColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5E6EC1B261534C300C5B442 /* ModelRawColors.swift */; };
 		D5E6EC1D261534C300C5B442 /* ModelRawColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5E6EC1B261534C300C5B442 /* ModelRawColors.swift */; };
 /* End PBXBuildFile section */
@@ -118,7 +116,6 @@
 		D5B395CC260B4A20000E933B /* FOLD.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FOLD.swift; sourceTree = "<group>"; };
 		D5B395D1260B4A34000E933B /* MTKGestureView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MTKGestureView.swift; sourceTree = "<group>"; };
 		D5B395DA260B4F65000E933B /* huffman.fold */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = huffman.fold; sourceTree = "<group>"; };
-		D5C3E13B260B974600A503F4 /* ModelCP.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ModelCP.swift; sourceTree = "<group>"; };
 		D5E6EC1B261534C300C5B442 /* ModelRawColors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelRawColors.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -213,7 +210,6 @@
 				D5B395BE260B4A1A000E933B /* ModelRaw.swift */,
 				D5E6EC1B261534C300C5B442 /* ModelRawColors.swift */,
 				D5B395C0260B4A1A000E933B /* ModelMesh.swift */,
-				D5C3E13B260B974600A503F4 /* ModelCP.swift */,
 				D5B395C1260B4A1A000E933B /* ModelFile.swift */,
 			);
 			path = Model;
@@ -354,7 +350,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D5C3E13C260B974600A503F4 /* ModelCP.swift in Sources */,
 				D5B395BA260B4A0D000E933B /* Shaders.metal in Sources */,
 				D5B395B2260B4A0D000E933B /* Camera.swift in Sources */,
 				D5B39582260B499F000E933B /* ViewController.swift in Sources */,
@@ -381,7 +376,6 @@
 				D5B395B7260B4A0D000E933B /* Renderer.swift in Sources */,
 				D5B395C7260B4A1A000E933B /* ModelMesh.swift in Sources */,
 				D5B395C9260B4A1A000E933B /* ModelFile.swift in Sources */,
-				D5C3E13D260B974600A503F4 /* ModelCP.swift in Sources */,
 				D5B395B5260B4A0D000E933B /* MetalView.swift in Sources */,
 				D5E6EC1D261534C300C5B442 /* ModelRawColors.swift in Sources */,
 				D5B395D3260B4A34000E933B /* MTKGestureView.swift in Sources */,

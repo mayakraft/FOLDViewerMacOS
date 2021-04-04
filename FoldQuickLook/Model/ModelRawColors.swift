@@ -32,7 +32,6 @@ class ModelRawColors: Model {
           if vertices[i*6+d] > maxs[d] { maxs[d] = vertices[i*6+d] }
         }
       }
-//      print("bounding box \(maxs), \(mins)")
       return MDLAxisAlignedBoundingBox(maxBounds: maxs, minBounds: mins)
     }
   }
