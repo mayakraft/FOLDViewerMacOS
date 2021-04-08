@@ -7,20 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		D55BF6B5260E2EFD0016803D /* simpler.fold in Resources */ = {isa = PBXBuildFile; fileRef = D55BF6B2260E2EFD0016803D /* simpler.fold */; };
-		D55BF6B6260E2EFD0016803D /* simpler.fold in Resources */ = {isa = PBXBuildFile; fileRef = D55BF6B2260E2EFD0016803D /* simpler.fold */; };
-		D55BF6B7260E2EFD0016803D /* simple.fold in Resources */ = {isa = PBXBuildFile; fileRef = D55BF6B3260E2EFD0016803D /* simple.fold */; };
-		D55BF6B8260E2EFD0016803D /* simple.fold in Resources */ = {isa = PBXBuildFile; fileRef = D55BF6B3260E2EFD0016803D /* simple.fold */; };
-		D55BF6B9260E2EFD0016803D /* simple-4.fold in Resources */ = {isa = PBXBuildFile; fileRef = D55BF6B4260E2EFD0016803D /* simple-4.fold */; };
-		D55BF6BA260E2EFD0016803D /* simple-4.fold in Resources */ = {isa = PBXBuildFile; fileRef = D55BF6B4260E2EFD0016803D /* simple-4.fold */; };
-		D5AA0356260B5DF800A38682 /* kraft-sea-turtle.fold in Resources */ = {isa = PBXBuildFile; fileRef = D5AA0355260B5DF800A38682 /* kraft-sea-turtle.fold */; };
-		D5AA0357260B5DF800A38682 /* kraft-sea-turtle.fold in Resources */ = {isa = PBXBuildFile; fileRef = D5AA0355260B5DF800A38682 /* kraft-sea-turtle.fold */; };
-		D5AA035B260B5DFE00A38682 /* crane.fold in Resources */ = {isa = PBXBuildFile; fileRef = D5AA035A260B5DFE00A38682 /* crane.fold */; };
-		D5AA035C260B5DFE00A38682 /* crane.fold in Resources */ = {isa = PBXBuildFile; fileRef = D5AA035A260B5DFE00A38682 /* crane.fold */; };
-		D5AA0360260B5E0300A38682 /* miura-ori.fold in Resources */ = {isa = PBXBuildFile; fileRef = D5AA035F260B5E0300A38682 /* miura-ori.fold */; };
-		D5AA0361260B5E0300A38682 /* miura-ori.fold in Resources */ = {isa = PBXBuildFile; fileRef = D5AA035F260B5E0300A38682 /* miura-ori.fold */; };
-		D5AA0365260B5E1200A38682 /* three-fold.fold in Resources */ = {isa = PBXBuildFile; fileRef = D5AA0364260B5E1200A38682 /* three-fold.fold */; };
-		D5AA0366260B5E1200A38682 /* three-fold.fold in Resources */ = {isa = PBXBuildFile; fileRef = D5AA0364260B5E1200A38682 /* three-fold.fold */; };
 		D5B39580260B499F000E933B /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5B3957F260B499F000E933B /* AppDelegate.swift */; };
 		D5B39582260B499F000E933B /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5B39581260B499F000E933B /* ViewController.swift */; };
 		D5B39584260B499F000E933B /* Document.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5B39583260B499F000E933B /* Document.swift */; };
@@ -52,8 +38,6 @@
 		D5B395CE260B4A20000E933B /* FOLD.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5B395CC260B4A20000E933B /* FOLD.swift */; };
 		D5B395D2260B4A34000E933B /* MTKGestureView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5B395D1260B4A34000E933B /* MTKGestureView.swift */; };
 		D5B395D3260B4A34000E933B /* MTKGestureView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5B395D1260B4A34000E933B /* MTKGestureView.swift */; };
-		D5B395DB260B4F65000E933B /* huffman.fold in Resources */ = {isa = PBXBuildFile; fileRef = D5B395DA260B4F65000E933B /* huffman.fold */; };
-		D5B395DC260B4F65000E933B /* huffman.fold in Resources */ = {isa = PBXBuildFile; fileRef = D5B395DA260B4F65000E933B /* huffman.fold */; };
 		D5E6EC1C261534C300C5B442 /* ModelRawColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5E6EC1B261534C300C5B442 /* ModelRawColors.swift */; };
 		D5E6EC1D261534C300C5B442 /* ModelRawColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5E6EC1B261534C300C5B442 /* ModelRawColors.swift */; };
 /* End PBXBuildFile section */
@@ -315,15 +299,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				D5B39586260B49A0000E933B /* Assets.xcassets in Resources */,
-				D5AA035B260B5DFE00A38682 /* crane.fold in Resources */,
-				D55BF6B7260E2EFD0016803D /* simple.fold in Resources */,
-				D5AA0360260B5E0300A38682 /* miura-ori.fold in Resources */,
-				D55BF6B5260E2EFD0016803D /* simpler.fold in Resources */,
-				D5AA0365260B5E1200A38682 /* three-fold.fold in Resources */,
-				D5B395DB260B4F65000E933B /* huffman.fold in Resources */,
-				D55BF6B9260E2EFD0016803D /* simple-4.fold in Resources */,
 				D5B39589260B49A0000E933B /* Main.storyboard in Resources */,
-				D5AA0356260B5DF800A38682 /* kraft-sea-turtle.fold in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -331,15 +307,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D55BF6B8260E2EFD0016803D /* simple.fold in Resources */,
-				D5AA0357260B5DF800A38682 /* kraft-sea-turtle.fold in Resources */,
-				D5B395DC260B4F65000E933B /* huffman.fold in Resources */,
-				D5AA035C260B5DFE00A38682 /* crane.fold in Resources */,
 				D5B395A1260B49FC000E933B /* PreviewViewController.xib in Resources */,
-				D55BF6B6260E2EFD0016803D /* simpler.fold in Resources */,
-				D5AA0366260B5E1200A38682 /* three-fold.fold in Resources */,
-				D55BF6BA260E2EFD0016803D /* simple-4.fold in Resources */,
-				D5AA0361260B5E0300A38682 /* miura-ori.fold in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -547,6 +515,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				PRODUCT_BUNDLE_IDENTIFIER = com.robbykraft.FoldQuickLook;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
@@ -567,6 +536,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				PRODUCT_BUNDLE_IDENTIFIER = com.robbykraft.FoldQuickLook;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
@@ -584,6 +554,7 @@
 					"@executable_path/../Frameworks",
 					"@executable_path/../../../../Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				PRODUCT_BUNDLE_IDENTIFIER = com.robbykraft.FoldQuickLook.FOLDPreview;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -602,6 +573,7 @@
 					"@executable_path/../Frameworks",
 					"@executable_path/../../../../Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				PRODUCT_BUNDLE_IDENTIFIER = com.robbykraft.FoldQuickLook.FOLDPreview;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;

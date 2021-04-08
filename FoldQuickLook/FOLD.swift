@@ -32,15 +32,30 @@ struct FOLDFormat: Decodable {
   let vertices_coords: [[Double]]?
   let vertices_vertices: [[Int]]?
   let vertices_edges: [[Int]]?
-  let vertices_faces: [[Int]]?
+  let vertices_faces: [[Int?]]?
   let edges_vertices: [[Int]]?
   let edges_assignment: [String]?
   let edges_foldAngle: [Double?]?
-  let edges_edges: [[Int?]]?
+//  let edges_edges: [[Int?]]?  // not in the spec
   let edges_faces: [[Int?]]?
   let faces_vertices: [[Int]]?
   let faces_edges: [[Int]]?
-  let faces_faces: [[Int]]?
+  let faces_faces: [[Int?]]?
+  // todo:
+  let file_frames: [FOLDFormat]?
+  // metadata entries
+  let file_spec: Double?
+  let file_creator: String?
+  let file_author: String?
+  let file_title: String?
+  let file_description: String?
+  let file_classes: [String]?
+  let frame_author: String?
+  let frame_title: String?
+  let frame_description: String?
+  let frame_unit: String?
+  let frame_classes: [String]?
+  let frame_attributes: [String]?
 }
 
 // analysis section
@@ -149,6 +164,17 @@ extension FOLDFormat {
         }
     }
 
+//    return FOLDFormat(vertices_coords: self.vertices_coords,
+//                      vertices_vertices: self.vertices_vertices,
+//                      vertices_edges: self.vertices_edges,
+//                      vertices_faces: self.vertices_faces,
+//                      edges_vertices: self.edges_vertices,
+//                      edges_assignment: self.edges_assignment,
+//                      edges_foldAngle: self.edges_foldAngle,
+//                      edges_faces: self.edges_faces,
+//                      faces_vertices: new_faces_vertices,
+//                      faces_edges: nil,
+//                      faces_faces: nil)
     return FOLDFormat(vertices_coords: self.vertices_coords,
                       vertices_vertices: self.vertices_vertices,
                       vertices_edges: self.vertices_edges,
@@ -156,11 +182,23 @@ extension FOLDFormat {
                       edges_vertices: self.edges_vertices,
                       edges_assignment: self.edges_assignment,
                       edges_foldAngle: self.edges_foldAngle,
-                      edges_edges: self.edges_edges,
                       edges_faces: self.edges_faces,
                       faces_vertices: new_faces_vertices,
                       faces_edges: nil,
-                      faces_faces: nil)
+                      faces_faces: nil,
+                      file_frames: self.file_frames,
+                      file_spec: 1.1,
+                      file_creator: nil,
+                      file_author: nil,
+                      file_title: nil,
+                      file_description: nil,
+                      file_classes: nil,
+                      frame_author: nil,
+                      frame_title: nil,
+                      frame_description: nil,
+                      frame_unit: nil,
+                      frame_classes: nil,
+                      frame_attributes: nil)
   }
 }
 
