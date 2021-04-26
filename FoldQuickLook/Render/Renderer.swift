@@ -23,7 +23,33 @@ class Renderer: NSObject, MTKViewDelegate {
   var camera: Camera!
   var extraBuffer: UnsafeMutablePointer<Float32>?
 
-  var model: Model!
+  var model: Model?
+  
+  // must set mtkView
+  weak var mtkView: MTKGestureView? {
+    didSet {
+      if let mtkView = self.mtkView {
+        mtkView.preferredFramesPerSecond = 60
+        mtkView.enableSetNeedsDisplay = true
+        mtkView.device = self.device
+        mtkView.framebufferOnly = false
+        mtkView.clearColor = MTLClearColor(red: 0, green: 0, blue: 0, alpha: 0)
+        mtkView.drawableSize = mtkView.frame.size
+        mtkView.enableSetNeedsDisplay = true
+        mtkView.isPaused = false
+        mtkView.colorPixelFormat = .bgra8Unorm_srgb
+        mtkView.depthStencilPixelFormat = .depth32Float
+        
+        // transparent background
+        mtkView.layer?.isOpaque = false
+        mtkView.layer?.backgroundColor = CGColor.clear
+
+        mtkView.delegate = self
+        
+        if camera == nil { camera = Camera(view: mtkView) }
+      }
+    }
+  }
   
   func loadFOLD (_ foldFile: FOLDFormat) {
     guard let mtkView = self.mtkView else { return }
@@ -51,45 +77,24 @@ class Renderer: NSObject, MTKViewDelegate {
     }
     // after a model is successfully loaded
     // build a pipeline using the mesh
-    self.buildPipeline(is3D: fold.is3D(), view: mtkView, vertexDescriptor: self.model.vertexDescriptor)
+    self.buildPipeline(is3D: fold.is3D(), view: mtkView, vertexDescriptor: self.model!.vertexDescriptor)
     // set the camera zoom to fit the model
-    self.camera.modelBounds = self.model.boundingBox
+    self.camera.modelBounds = self.model!.boundingBox
     // hack to make 2D models fit the window better
     // we need to move this into 3D modelsl too, but radius should be calculated
     // taking into consideration the widening in the perspective projection
     if !fold.is3D() { self.camera.modelRadius *= 0.75 }
   }
   
-  // must set mtkView
-  var mtkView: MTKGestureView? {
-    didSet {
-      if let mtkView = self.mtkView {
-        mtkView.preferredFramesPerSecond = 60
-        mtkView.enableSetNeedsDisplay = true
-        mtkView.device = self.device
-        mtkView.framebufferOnly = false
-        mtkView.clearColor = MTLClearColor(red: 0, green: 0, blue: 0, alpha: 0)
-        mtkView.drawableSize = mtkView.frame.size
-        mtkView.enableSetNeedsDisplay = true
-        mtkView.isPaused = false
-        mtkView.colorPixelFormat = .bgra8Unorm_srgb
-        mtkView.depthStencilPixelFormat = .depth32Float
-        
-        // transparent background
-        mtkView.layer?.isOpaque = false
-        mtkView.layer?.backgroundColor = CGColor.clear
-
-        mtkView.delegate = self
-        
-        camera = Camera(view: mtkView)
-      }
-    }
-  }
-  
   override init() {
     self.device = MTLCreateSystemDefaultDevice()!
     self.commandQueue = device.makeCommandQueue()!
     super.init()
+  }
+  
+  func deallocMesh() {
+    print("deallocating mesh")
+    self.model?.cleanup()
   }
 
   func buildPipeline(is3D: Bool, view: MTKView, vertexDescriptor: MTLVertexDescriptor) {
@@ -130,7 +135,7 @@ class Renderer: NSObject, MTKViewDelegate {
                             projectionMatrix: camera.projection)
     commandEncoder.setVertexBytes(&uniforms, length: MemoryLayout<Uniforms>.size, index: 1)
     commandEncoder.setRenderPipelineState(renderPipeline)
-    model.draw(commandEncoder: commandEncoder)
+    model?.draw(commandEncoder: commandEncoder)
     commandEncoder.endEncoding()
     commandBuffer.present(drawable)
     commandBuffer.commit()

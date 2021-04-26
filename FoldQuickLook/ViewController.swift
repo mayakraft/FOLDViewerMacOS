@@ -18,6 +18,11 @@ class ViewController: NSViewController {
     super.viewWillLayout()
     metalView.frame = self.view.bounds
   }
+  
+  override func viewDidDisappear() {
+    super.viewDidDisappear()
+    renderer.deallocMesh()
+  }
 
   override func viewDidLoad() {
     super.viewDidLoad()

@@ -16,6 +16,9 @@ class ModelRawColors: Model {
   var vertexBuffer: MTLBuffer!
   var triangleBuffer: MTLBuffer!
   var trianglesCount: Int = 0
+  // these will be freed in cleanup()
+  var verticesPointer: UnsafeMutablePointer<Float32>?
+  var trianglesPointer: UnsafeMutablePointer<UInt16>?
 
   // get the bounding box by iterating over all the vertices
   // this assumes that there are no normals/colors mixed in
@@ -43,23 +46,23 @@ class ModelRawColors: Model {
 
   internal func loadArrays(vertices: [Float32], triangles: [UInt16], colors: [Float32]) {
 //    let verticesPointer = UnsafeMutablePointer<Float32>.allocate(capacity: vertices.count)
-    let trianglesPointer = UnsafeMutablePointer<UInt16>.allocate(capacity: triangles.count)
-    let pointer = UnsafeMutablePointer<Float32>.allocate(capacity: vertices.count * 2)
+    trianglesPointer = UnsafeMutablePointer<UInt16>.allocate(capacity: triangles.count)
+    verticesPointer = UnsafeMutablePointer<Float32>.allocate(capacity: vertices.count * 2)
     for i in 0..<(vertices.count/3) {
-      pointer[i*6 + 0] = vertices[i*3 + 0]
-      pointer[i*6 + 1] = vertices[i*3 + 1]
-      pointer[i*6 + 2] = vertices[i*3 + 2]
-      pointer[i*6 + 3] = colors[i*3 + 0]
-      pointer[i*6 + 4] = colors[i*3 + 1]
-      pointer[i*6 + 5] = colors[i*3 + 2]
+      verticesPointer![i*6 + 0] = vertices[i*3 + 0]
+      verticesPointer![i*6 + 1] = vertices[i*3 + 1]
+      verticesPointer![i*6 + 2] = vertices[i*3 + 2]
+      verticesPointer![i*6 + 3] = colors[i*3 + 0]
+      verticesPointer![i*6 + 4] = colors[i*3 + 1]
+      verticesPointer![i*6 + 5] = colors[i*3 + 2]
     }
 //    vertices.enumerated().forEach { verticesPointer[$0.offset] = $0.element }
-    triangles.enumerated().forEach { trianglesPointer[$0.offset] = $0.element }
-    vertexBuffer = device.makeBuffer(bytes: pointer,
+    triangles.enumerated().forEach { trianglesPointer![$0.offset] = $0.element }
+    vertexBuffer = device.makeBuffer(bytes: verticesPointer!,
 //                                     length: MemoryLayout<Float32>.size * vertices.count,
                                      length: MemoryLayout<Float32>.size * vertices.count * 2,
                                      options: [])
-    triangleBuffer = device.makeBuffer(bytes: trianglesPointer,
+    triangleBuffer = device.makeBuffer(bytes: trianglesPointer!,
                                        length: MemoryLayout<UInt16>.size * triangles.count,
                                        options: [])
     trianglesCount = triangles.count / 3
@@ -81,5 +84,13 @@ class ModelRawColors: Model {
                                          indexType: MTLIndexType.uint16,
                                          indexBuffer: triangleBuffer,
                                          indexBufferOffset: 0)
+  }
+
+  override func cleanup() {
+    print("cleanup() cp mesh")
+    verticesPointer?.deallocate()
+    trianglesPointer?.deallocate()
+    vertexBuffer = nil
+    triangleBuffer = nil
   }
 }

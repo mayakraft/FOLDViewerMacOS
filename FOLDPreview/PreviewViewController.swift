@@ -16,6 +16,11 @@ class PreviewViewController: NSViewController, QLPreviewingController {
   override var nibName: NSNib.Name? {
     return NSNib.Name("PreviewViewController")
   }
+  
+  override func viewDidDisappear() {
+    super.viewDidDisappear()
+    renderer?.deallocMesh()
+  }
 
   override func viewWillLayout() {
     super.viewWillLayout()

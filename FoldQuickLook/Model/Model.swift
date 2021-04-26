@@ -19,4 +19,5 @@ open class Model: NSObject {
     self.device = device
     super.init()
   }
+  func cleanup() { }  // "dealloc", "deinit" already taken..
 }

@@ -17,7 +17,7 @@ class ModelMesh: ModelRaw {
   var verticesStride: Int = 6
   var verticesCount: Int = 0
 //  var trianglesCount: Int = 0 // in superclass
-  
+
   override init(device: MTLDevice, vertices: [Float32], triangles: [UInt16]) {
     super.init(device: device, vertices: vertices, triangles: triangles)
     makeBuffers(vertices: vertices, triangles: triangles)
@@ -47,24 +47,24 @@ class ModelMesh: ModelRaw {
   func makeBuffers(vertices: [Float32], triangles: [UInt16]) {
     verticesCount = vertices.count / 3
     trianglesCount = triangles.count / 3
-    let verticesPointer = UnsafeMutablePointer<Float32>.allocate(capacity: verticesCount * verticesStride)
-    let trianglesPointer = UnsafeMutablePointer<UInt16>.allocate(capacity: triangles.count)
+    verticesPointer = UnsafeMutablePointer<Float32>.allocate(capacity: verticesCount * verticesStride)
+    trianglesPointer = UnsafeMutablePointer<UInt16>.allocate(capacity: triangles.count)
     // fill vertices and interleave normals and texture
     for i in 0..<verticesCount {
-      verticesPointer[i * verticesStride + 0] = vertices[i * 3 + 0]
-      verticesPointer[i * verticesStride + 1] = vertices[i * 3 + 1]
-      verticesPointer[i * verticesStride + 2] = vertices[i * 3 + 2]
-      verticesPointer[i * verticesStride + 3] = 0.0 // normal
-      verticesPointer[i * verticesStride + 4] = 0.0 // normal
-      verticesPointer[i * verticesStride + 5] = 0.0 // normal
-//      verticesPointer[i * verticesStride + 6] = 0.0 // texture
-//      verticesPointer[i * verticesStride + 7] = 0.0 // texture
+      verticesPointer![i * verticesStride + 0] = vertices[i * 3 + 0]
+      verticesPointer![i * verticesStride + 1] = vertices[i * 3 + 1]
+      verticesPointer![i * verticesStride + 2] = vertices[i * 3 + 2]
+      verticesPointer![i * verticesStride + 3] = 0.0 // normal
+      verticesPointer![i * verticesStride + 4] = 0.0 // normal
+      verticesPointer![i * verticesStride + 5] = 0.0 // normal
+//      verticesPointer![i * verticesStride + 6] = 0.0 // texture
+//      verticesPointer![i * verticesStride + 7] = 0.0 // texture
     }
-    triangles.enumerated().forEach { trianglesPointer[$0.offset] = $0.element }
-    vertexBuffer = device.makeBuffer(bytes: verticesPointer,
+    triangles.enumerated().forEach { trianglesPointer![$0.offset] = $0.element }
+    vertexBuffer = device.makeBuffer(bytes: verticesPointer!,
                                      length: MemoryLayout<Float32>.size * verticesCount * verticesStride,
                                      options: [])
-    triangleBuffer = device.makeBuffer(bytes: trianglesPointer,
+    triangleBuffer = device.makeBuffer(bytes: trianglesPointer!,
                                        length: MemoryLayout<UInt16>.size * trianglesCount * 3,
                                        options: [])
   }
@@ -136,6 +136,17 @@ class ModelMesh: ModelRaw {
                                            indexBuffer: submesh.indexBuffer.buffer,
                                            indexBufferOffset: 0)
     }
+  }
+
+  override func cleanup() {
+    print("cleanup() 3d mesh")
+    verticesPointer?.deallocate()
+    trianglesPointer?.deallocate()
+    vertexBuffer = nil
+    triangleBuffer = nil
+    mesh = nil
+//    vertexBuffer.setPurgeableState(MTLPurgeableState.volatile)
+//    triangleBuffer.setPurgeableState(MTLPurgeableState.volatile)
   }
 
 //  func printVertexBuffer(vertexBuffer: MDLMeshBuffer) {

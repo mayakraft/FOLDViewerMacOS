@@ -16,6 +16,9 @@ class ModelRaw: Model {
   var vertexBuffer: MTLBuffer!
   var triangleBuffer: MTLBuffer!
   var trianglesCount: Int = 0
+  // these will be freed in cleanup()
+  var verticesPointer: UnsafeMutablePointer<Float32>?
+  var trianglesPointer: UnsafeMutablePointer<UInt16>?
 
   // get the bounding box by iterating over all the vertices
   // this assumes that there are no normals/colors mixed in
@@ -43,14 +46,14 @@ class ModelRaw: Model {
   }
 
   internal func loadArrays(vertices: [Float32], triangles: [UInt16]) {
-    let verticesPointer = UnsafeMutablePointer<Float32>.allocate(capacity: vertices.count)
-    let trianglesPointer = UnsafeMutablePointer<UInt16>.allocate(capacity: triangles.count)
-    vertices.enumerated().forEach { verticesPointer[$0.offset] = $0.element }
-    triangles.enumerated().forEach { trianglesPointer[$0.offset] = $0.element }
-    vertexBuffer = device.makeBuffer(bytes: verticesPointer,
+    verticesPointer = UnsafeMutablePointer<Float32>.allocate(capacity: vertices.count)
+    trianglesPointer = UnsafeMutablePointer<UInt16>.allocate(capacity: triangles.count)
+    vertices.enumerated().forEach { verticesPointer![$0.offset] = $0.element }
+    triangles.enumerated().forEach { trianglesPointer![$0.offset] = $0.element }
+    vertexBuffer = device.makeBuffer(bytes: verticesPointer!,
                                      length: MemoryLayout<Float32>.size * vertices.count,
                                      options: [])
-    triangleBuffer = device.makeBuffer(bytes: trianglesPointer,
+    triangleBuffer = device.makeBuffer(bytes: trianglesPointer!,
                                        length: MemoryLayout<UInt16>.size * triangles.count,
                                        options: [])
     trianglesCount = triangles.count / 3
@@ -68,5 +71,12 @@ class ModelRaw: Model {
                                          indexType: MTLIndexType.uint16,
                                          indexBuffer: triangleBuffer,
                                          indexBufferOffset: 0)
+  }
+  
+  override func cleanup() {
+    verticesPointer?.deallocate()
+    trianglesPointer?.deallocate()
+    vertexBuffer = nil
+    triangleBuffer = nil
   }
 }
